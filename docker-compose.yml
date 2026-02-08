@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PHISHING_API_KEY=${PHISHING_API_KEY:-dev-api-key}
+      - PHISHING_MODEL_PATH=models/phishing_model.pkl
+    volumes:
+      - ./models:/app/models
