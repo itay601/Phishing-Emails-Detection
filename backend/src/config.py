@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -6,7 +10,7 @@ class Settings(BaseSettings):
     model_path: str = "models/phishing_model.pkl"
     debug: bool = False
 
-    model_config = {"env_file": ".env", "env_prefix": "PHISHING_"}
+    model_config = {"env_file": str(BASE_DIR / ".env"), "env_prefix": "PHISHING_"}
 
 
 settings = Settings()

@@ -12,9 +12,16 @@ function buildAddOn(e) {
     )
   );
 
-  var scanAction = CardService.newAction().setFunctionName(
-    "onScanButtonClicked"
-  );
+  // Pass messageId and accessToken as string parameters to the action
+  var params = {};
+  if (e.messageMetadata) {
+    params.messageId = e.messageMetadata.messageId || "";
+    params.accessToken = e.messageMetadata.accessToken || "";
+  }
+
+  var scanAction = CardService.newAction()
+    .setFunctionName("onScanButtonClicked")
+    .setParameters(params);
   section.addWidget(
     CardService.newTextButton()
       .setText("Scan for Phishing")
@@ -31,7 +38,17 @@ function buildAddOn(e) {
  * Extracts email fields and sends them to the backend API.
  */
 function onScanButtonClicked(e) {
-  var messageId = e.gmail.messageId;
+  var messageId = e.parameters.messageId;
+  var accessToken = e.parameters.accessToken;
+
+  if (!messageId) {
+    return buildErrorCard("Could not read message ID. Please close and reopen the email.");
+  }
+
+  if (accessToken) {
+    GmailApp.setCurrentMessageAccessToken(accessToken);
+  }
+
   var message = GmailApp.getMessageById(messageId);
 
   var emailContent = {
@@ -46,6 +63,9 @@ function onScanButtonClicked(e) {
 
   try {
     var result = analyzeEmail(emailContent);
+    if (!result || typeof result !== "object" || !result.classification) {
+      throw new Error("The API returned an empty or invalid response.");
+    }
     return buildResultCard(result);
   } catch (err) {
     return buildErrorCard(err.message);
