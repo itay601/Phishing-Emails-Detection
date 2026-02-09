@@ -9,7 +9,7 @@ KNOWN_BRANDS = [
     "paypal", "apple", "microsoft", "google", "amazon", "netflix",
     "facebook", "instagram", "whatsapp", "linkedin", "twitter",
     "dropbox", "chase", "wellsfargo", "bankofamerica", "citibank",
-    "ups", "fedex", "dhl", "usps",
+    "ups", "fedex", "dhl", "usps", "bank", "secure", "login",
 ]
 
 # Common homograph characters (look-alike substitutions)
@@ -48,6 +48,22 @@ class DomainAnalyzer(BaseHeuristic):
                 indicators.append(f"Typosquatting in link: {link_domain} resembles {typo_result}")
                 score = max(score, 0.85)
 
+            brand_in_domain = self._check_brand_in_domain(link_domain)
+            if brand_in_domain:
+                indicators.append(
+                    f"Brand name \"{brand_in_domain}\" embedded in link domain: {link_domain}"
+                )
+                score = max(score, 0.6)
+
+        # Also check sender domain for embedded brand
+        if sender_domain:
+            brand_in_sender = self._check_brand_in_domain(sender_domain)
+            if brand_in_sender:
+                indicators.append(
+                    f"Brand name \"{brand_in_sender}\" embedded in sender domain: {sender_domain}"
+                )
+                score = max(score, 0.6)
+
         return HeuristicResult(name="domain_analysis", score=score, indicators=indicators)
 
     def _get_domain(self, address: str) -> str | None:
@@ -70,6 +86,16 @@ class DomainAnalyzer(BaseHeuristic):
                 continue  # Exact match, not a typosquat
             distance = self._levenshtein(domain_name, brand)
             if 0 < distance <= 2:
+                return brand
+        return None
+
+    def _check_brand_in_domain(self, domain: str) -> str | None:
+        """Check if a known brand name appears as a substring in the domain."""
+        extracted = tldextract.extract(domain)
+        domain_name = extracted.domain.lower()
+
+        for brand in KNOWN_BRANDS:
+            if brand in domain_name and domain_name != brand:
                 return brand
         return None
 

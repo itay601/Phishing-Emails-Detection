@@ -1,5 +1,11 @@
 # Phishing-Emails-Detection
 
+
+
+# port tunneling 
+ngrok 8000 
+
+# test run  
 cat <<'JSONEOF' > /tmp/test_payload.json
 {
   "email_content": {
@@ -16,6 +22,6 @@ JSONEOF
 
 curl -s -X POST https://nonexpediently-nonenumerated-santa.ngrok-free.dev/api/v1/analyze \
      -H "Content-Type: application/json" \
-     -H "X-API-Key: my-secret-123" \
+     -H "X-API-Key: $PHISHING_API_KEY" \
      -H "ngrok-skip-browser-warning: true" \
      -d @/tmp/test_payload.json | jq .

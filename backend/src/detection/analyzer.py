@@ -46,21 +46,19 @@ class PhishingAnalyzer:
             )
             ml_prediction = self.ml_model.predict(features["text"])
 
-        # Compute final score
-        if scores:
-            max_score = max(scores)
-            avg_score = sum(scores) / len(scores)
-        else:
-            max_score = avg_score = 0.0
+        # Compute final score — only average heuristics that fired
+        active_scores = [s for s in scores if s > 0]
+        max_score = max(scores) if scores else 0.0
+        avg_active = (sum(active_scores) / len(active_scores)) if active_scores else 0.0
 
         if ml_prediction:
             final_score = (
                 0.4 * max_score
-                + 0.3 * avg_score
+                + 0.3 * avg_active
                 + 0.3 * ml_prediction.confidence
             )
         else:
-            final_score = 0.5 * max_score + 0.5 * avg_score
+            final_score = 0.6 * max_score + 0.4 * avg_active
 
         # Classify
         if final_score >= 0.7:

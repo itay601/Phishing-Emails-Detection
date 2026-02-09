@@ -2,8 +2,8 @@
  * Configuration — update these values for your deployment.
  */
 var CONFIG = {
-  API_URL: "https://nonexpediently-nonenumerated-santa.ngrok-free.dev/api/v1/analyze",
-  API_KEY: "my-secret-123",
+  API_URL: PropertiesService.getScriptProperties().getProperty("API_URL") || "",
+  API_KEY: PropertiesService.getScriptProperties().getProperty("API_KEY") || "",
 };
 
 /**
