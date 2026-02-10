@@ -346,7 +346,7 @@
  Gmail too, and has first-class access to email content via
  GmailApp API.
 
- ---
+ --
  Summary for Your Review Presentation
 
  The project is a well-structured phishing detection system with

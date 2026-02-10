@@ -23,17 +23,31 @@ class ParsedEmail:
     links: list[LinkInfo] = field(default_factory=list)
 
 
+URL_REGEX = re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE)
+
+
 def parse_email(email_data: dict) -> ParsedEmail:
     """Parse raw email data dict into a structured ParsedEmail."""
     body_html = email_data.get("body_html", "")
+    body_text = email_data.get("body_text", "")
+
+    # Extract links from HTML first
     links = extract_links(body_html)
+    html_hrefs = {link.href.lower() for link in links}
+
+    # Also extract plain-text URLs not already found in HTML
+    for match in URL_REGEX.finditer(body_text):
+        url = match.group().rstrip(".,;:!?)")
+        if url.lower() not in html_hrefs:
+            links.append(LinkInfo(href=url, display_text=url, is_mismatched=False))
+            html_hrefs.add(url.lower())
 
     return ParsedEmail(
         sender=email_data.get("from", ""),
         sender_name=email_data.get("from_name", ""),
         recipient=email_data.get("to", ""),
         subject=email_data.get("subject", ""),
-        body_text=email_data.get("body_text", ""),
+        body_text=body_text,
         body_html=body_html,
         headers=email_data.get("headers", {}),
         links=links,

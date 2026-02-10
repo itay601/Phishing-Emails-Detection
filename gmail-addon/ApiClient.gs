@@ -2,8 +2,8 @@
  * Configuration — update these values for your deployment.
  */
 var CONFIG = {
-  API_URL: "https://your-backend-url.com/api/v1/analyze",
-  API_KEY: "your-api-key-here",
+  API_URL: PropertiesService.getScriptProperties().getProperty("API_URL") || "",
+  API_KEY: PropertiesService.getScriptProperties().getProperty("API_KEY") || "",
 };
 
 /**
@@ -12,15 +12,21 @@ var CONFIG = {
  * @returns {Object} The analysis result from the backend.
  */
 function analyzeEmail(emailContent) {
+  // Add this check at the very top:
+  if (!emailContent) {
+    throw new Error("The email content provided to analyzeEmail was empty or undefined.");
+  }
+
   var payload = {
     email_content: emailContent,
   };
 
   var options = {
     method: "post",
-    contentType: "application/json",
     headers: {
+      "Content-Type": "application/json",
       "X-API-Key": CONFIG.API_KEY,
+      "ngrok-skip-browser-warning": "true",
     },
     payload: JSON.stringify(payload),
     muteHttpExceptions: true,

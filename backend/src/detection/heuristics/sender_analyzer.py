@@ -12,7 +12,8 @@ FREE_EMAIL_PROVIDERS = {
 BRAND_KEYWORDS = [
     "paypal", "apple", "microsoft", "google", "amazon", "netflix",
     "facebook", "instagram", "support", "security", "admin",
-    "helpdesk", "service", "billing", "account",
+    "helpdesk", "service", "billing", "account", "bank", "login",
+    "verify", "secure",
 ]
 
 
@@ -36,6 +37,17 @@ class SenderAnalyzer(BaseHeuristic):
                         f"Free email ({sender_domain}) with brand name in display: \"{email.sender_name}\""
                     )
                     score = max(score, 0.8)
+                    break
+
+        # Brand keyword in domain name (e.g. "fake-bank.com", "paypal-security.com")
+        if sender_domain and sender_domain not in FREE_EMAIL_PROVIDERS:
+            domain_no_tld = sender_domain.rsplit(".", 1)[0].replace("-", "").replace("_", "")
+            for keyword in BRAND_KEYWORDS:
+                if keyword in domain_no_tld and domain_no_tld != keyword:
+                    indicators.append(
+                        f"Brand keyword \"{keyword}\" embedded in sender domain: {sender_domain}"
+                    )
+                    score = max(score, 0.6)
                     break
 
         # Display name spoofing: name contains an email address

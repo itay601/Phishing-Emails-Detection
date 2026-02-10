@@ -15,6 +15,11 @@ SUSPICIOUS_TLDS = {
 
 IP_URL_PATTERN = re.compile(r"https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
 
+SUSPICIOUS_URL_KEYWORDS = {
+    "login", "verify", "account", "secure", "update", "confirm",
+    "signin", "banking", "password", "credential",
+}
+
 
 class LinkAnalyzer(BaseHeuristic):
     def analyze(self, email: ParsedEmail) -> HeuristicResult:
@@ -45,6 +50,13 @@ class LinkAnalyzer(BaseHeuristic):
             for tld in SUSPICIOUS_TLDS:
                 if href.endswith(tld) or (tld + "/") in href:
                     indicators.append(f"Suspicious TLD: {tld}")
+                    score = max(score, 0.5)
+                    break
+
+            # Suspicious keywords in URL (e.g. fake-bank-login.com/verify)
+            for keyword in SUSPICIOUS_URL_KEYWORDS:
+                if keyword in href:
+                    indicators.append(f"Suspicious keyword in URL: \"{keyword}\"")
                     score = max(score, 0.5)
                     break
 
