@@ -10,3 +10,5 @@ dist/
 build/
 .venv/
 venv/
+model-v2.ipynb
+model.ipynb
