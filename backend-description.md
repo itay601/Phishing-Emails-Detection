@@ -21,11 +21,11 @@ backend/
     ├── detection/
     │   ├── analyzer.py     # Orchestrator - runs all heuristics + ML, calculates final score
     │   ├── heuristics/
-    │   │   ├── base.py             # Abstract base class (score 0-1 + indicators)
-    │   │   ├── link_analyzer.py    # Checks URLs: shorteners, mismatches, IP URLs, suspicious TLDs
-    │   │   ├── domain_analyzer.py  # Checks domains: typosquatting, homograph attacks, brand spoofing
+    │   │   ├── base.py              # Abstract base class (score 0-1 + indicators)
+    │   │   ├── link_analyzer.py     # Checks URLs: shorteners, mismatches, IP URLs, suspicious TLDs
+    │   │   ├── domain_analyzer.py   # Checks domains: typosquatting, homograph attacks, brand spoofing
     │   │   ├── language_analyzer.py # Checks text: urgency phrases, threats
-    │   │   └── sender_analyzer.py  # Checks sender: free email spoofing, reply-to mismatch
+    │   │   └── sender_analyzer.py   # Checks sender: free email spoofing, reply-to mismatch
     │   └── ml/
     │       ├── model.py        # Loads sklearn pickle model, returns prediction
     │       └── preprocessor.py # Extracts features (text, link count, uppercase ratio, etc.)

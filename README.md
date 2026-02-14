@@ -8,8 +8,8 @@ A real-time phishing email detection system that combines rule-based heuristics 
 Gmail Inbox
     │
     ▼
-┌──────────────────┐         HTTPS / JSON          ┌──────────────────────────────┐
-│  Gmail Add-on    │  ──────────────────────────►   │  FastAPI Backend              │
+┌──────────────────┐         HTTPS / JSON           ┌──────────────────────────────┐
+│  Gmail Add-on    │  ──────────────────────────►   │  FastAPI Backend             │
 │  (Apps Script)   │  ◄──────────────────────────   │                              │
 │                  │     classification result      │  ┌────────────────────────┐  │
 │  • Scan button   │                                │  │  Heuristic Analyzers   │  │
@@ -23,7 +23,7 @@ Gmail Inbox
                                                     │  │  TF-IDF + LogReg       │  │
                                                     │  └────────────────────────┘  │
                                                     │                              │
-                                                    │  Scoring: 0.4×max + 0.3×avg │
+                                                    │  Scoring: 0.4×max + 0.3×avg  │
                                                     │           + 0.3×ML conf      │
                                                     └──────────────────────────────┘
 ```
@@ -255,8 +255,28 @@ cat <<'JSONEOF' > /tmp/test_payload.json
 }
 JSONEOF
 
+
 curl -s -X POST https://nonexpediently-nonenumerated-santa.ngrok-free.dev/api/v1/analyze \
      -H "Content-Type: application/json" \
      -H "X-API-Key: $PHISHING_API_KEY" \
      -d @/tmp/test_payload.json | jq .
+
+
+
+-------------------------------
+          --Docker--
+-------------------------------
+docker run -d -p 8000:8000 -e PHISHING_API_KEY=my-secret-123 -e PHISHING_MODEL_PATH=../models/phishing_model.pkl --name phishing-email phishing-email
+
+      |
+      V 
+
+ngrok http 8000
+
+      |
+      V
+
+check-in-emails
+-------------------------------
+
 ```

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Header, HTTPException
 
 from src.api.schemas import (
@@ -11,6 +13,8 @@ from src.config import settings
 from src.detection.analyzer import PhishingAnalyzer
 from src.parser.email_parser import parse_email
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 analyzer = PhishingAnalyzer()
 
@@ -21,7 +25,14 @@ def analyze_email(
     x_api_key: str = Header(default=None),
 ):
     if settings.api_key and x_api_key != settings.api_key:
+        logger.warning("Unauthorized request — invalid or missing API key")
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+    logger.info(
+        "Analyze request — from: %s, subject: %s",
+        request.email_content.from_address or "(empty)",
+        request.email_content.subject or "(empty)",
+    )
 
     # Build email data dict for the parser
     email_data = {
@@ -35,6 +46,8 @@ def analyze_email(
     }
 
     parsed = parse_email(email_data)
+    logger.debug("Parsed email — %d link(s) extracted", len(parsed.links))
+
     result = analyzer.analyze(parsed)
 
     heuristic_details = [
@@ -48,6 +61,13 @@ def analyze_email(
             is_phishing=result.ml_prediction.is_phishing,
             confidence=result.ml_prediction.confidence,
         )
+
+    logger.info(
+        "Result — classification: %s, score: %.2f, indicators: %d",
+        result.classification,
+        result.confidence_score,
+        sum(len(h.indicators) for h in result.heuristic_results),
+    )
 
     return AnalyzeResponse(
         classification=result.classification,

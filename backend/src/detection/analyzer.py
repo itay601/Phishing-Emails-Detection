@@ -34,9 +34,19 @@ class PhishingAnalyzer:
         self.ml_model = PhishingMLModel(settings.model_path)
 
     def analyze(self, email: ParsedEmail) -> AnalysisResult:
+        logger.info("Starting analysis for email from '%s'", email.sender or "(unknown)")
+
         # Run all heuristics
         heuristic_results = [h.analyze(email) for h in self.heuristics]
         scores = [r.score for r in heuristic_results]
+
+        for r in heuristic_results:
+            logger.info(
+                "  Heuristic %-20s score=%.2f  indicators=%s",
+                r.name,
+                r.score,
+                r.indicators if r.indicators else "none",
+            )
 
         # Run ML model if available
         ml_prediction = None
@@ -45,6 +55,14 @@ class PhishingAnalyzer:
                 email.subject, email.body_text, len(email.links)
             )
             ml_prediction = self.ml_model.predict(features["text"])
+            if ml_prediction:
+                logger.info(
+                    "  ML prediction — is_phishing=%s, confidence=%.2f",
+                    ml_prediction.is_phishing,
+                    ml_prediction.confidence,
+                )
+        else:
+            logger.info("  ML model not available — using heuristics only")
 
         # Compute final score — only average heuristics that fired
         active_scores = [s for s in scores if s > 0]
@@ -59,6 +77,11 @@ class PhishingAnalyzer:
             )
         else:
             final_score = 0.6 * max_score + 0.4 * avg_active
+
+        logger.debug(
+            "Score breakdown — max=%.2f, avg_active=%.2f, final=%.2f",
+            max_score, avg_active, final_score,
+        )
 
         # Classify
         if final_score >= 0.7:
@@ -79,6 +102,8 @@ class PhishingAnalyzer:
             summary = f"Medium-risk: {len(all_indicators)} suspicious indicator(s) found"
         else:
             summary = "No significant phishing indicators detected"
+
+        logger.info("Analysis complete — %s (score %.2f)", classification, final_score)
 
         return AnalysisResult(
             classification=classification,
