@@ -1,7 +1,10 @@
+import logging
 import re
 from dataclasses import dataclass, field
 
 from bs4 import BeautifulSoup
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -28,6 +31,8 @@ URL_REGEX = re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE)
 
 def parse_email(email_data: dict) -> ParsedEmail:
     """Parse raw email data dict into a structured ParsedEmail."""
+    logger.debug("Parsing email from '%s'", email_data.get("from", "(unknown)"))
+
     body_html = email_data.get("body_html", "")
     body_text = email_data.get("body_text", "")
 
@@ -41,6 +46,18 @@ def parse_email(email_data: dict) -> ParsedEmail:
         if url.lower() not in html_hrefs:
             links.append(LinkInfo(href=url, display_text=url, is_mismatched=False))
             html_hrefs.add(url.lower())
+
+    mismatched = [l for l in links if l.is_mismatched]
+    if mismatched:
+        logger.warning("Found %d mismatched link(s) in email", len(mismatched))
+        for l in mismatched:
+            logger.warning("  Mismatch: display='%s' → href='%s'", l.display_text, l.href)
+
+    logger.debug(
+        "Parse complete — %d link(s), subject: '%s'",
+        len(links),
+        email_data.get("subject", ""),
+    )
 
     return ParsedEmail(
         sender=email_data.get("from", ""),
